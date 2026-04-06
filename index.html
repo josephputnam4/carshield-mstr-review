@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CarShield | MicroStrategy Review Studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #11141c;
+    --surface2: #171b26;
+    --border: #1f2535;
+    --accent: #e8500a;
+    --accent-glow: rgba(232,80,10,0.2);
+    --accent2: #f97316;
+    --accent3: #00c2ff;
+    --green: #34d399;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --text: #edf0f7;
+    --muted: #5c6b88;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+    --display: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; overflow-x: hidden; }
+
+  /* ── Landing ────────────────────────────────────── */
+  #landing {
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+
+  .land-hero {
+    position: relative; overflow: hidden;
+    padding: 60px 24px 0;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+  .land-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% -5%, rgba(232,80,10,0.16) 0%, transparent 65%),
+      radial-gradient(ellipse 40% 30% at 80% 80%, rgba(249,115,22,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .land-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(232,80,10,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,80,10,0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 30%, transparent 80%);
+  }
+
+  .land-logos {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: 18px;
+    margin-bottom: 44px;
+  }
+  .cs-shield {
+    width: 64px; height: 74px;
+    background: linear-gradient(160deg, #e8500a 0%, #bf3d06 100%);
+    clip-path: polygon(50% 0%, 100% 18%, 100% 62%, 50% 100%, 0% 62%, 0% 18%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--display); font-size: 1.4rem; color: white; font-weight: 800;
+    filter: drop-shadow(0 6px 24px rgba(232,80,10,0.5));
+    animation: pulseShield 3.5s ease-in-out infinite;
+  }
+  @keyframes pulseShield {
+    0%,100% { filter: drop-shadow(0 6px 24px rgba(232,80,10,0.5)); }
+    50% { filter: drop-shadow(0 6px 36px rgba(232,80,10,0.8)); }
+  }
+  .land-logo-sep {
+    width: 1px; height: 52px;
+    background: linear-gradient(to bottom, transparent, var(--border), transparent);
+  }
+  .mstr-pill {
+    padding: 10px 20px; border-radius: 12px;
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    font-family: var(--mono); font-size: 0.9rem; font-weight: 700;
+    color: white; letter-spacing: -0.5px;
+    box-shadow: 0 6px 20px rgba(249,115,22,0.35);
+  }
+  .land-logo-labels {
+    display: flex; align-items: center; gap: 18px; margin-top: 8px;
+  }
+  .land-logo-label { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; text-align: center; }
+
+  .land-eyebrow {
+    position: relative; z-index: 1;
+    font-family: var(--mono); font-size: 0.68rem; font-weight: 700;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 4px;
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .land-eyebrow::before, .land-eyebrow::after {
+    content: ''; flex: 1; max-width: 40px; height: 1px; background: var(--accent); opacity: 0.4;
+  }
+
+  .land-title {
+    position: relative; z-index: 1;
+    font-family: var(--display); font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800; color: var(--text);
+    line-height: 1.1; letter-spacing: -2px;
+    margin-bottom: 6px;
+  }
+  .land-title-accent { color: var(--accent); }
+  .land-title-sub {
+    font-family: var(--display); font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    font-weight: 700; color: var(--muted); letter-spacing: -1px;
+    margin-bottom: 24px;
+  }
+  .land-desc {
+    position: relative; z-index: 1;
+    max-width: 600px; font-size: 1rem; color: var(--muted);
+    line-height: 1.75; margin-bottom: 44px;
+  }
+  .land-desc strong { color: var(--text); }
+
+  /* ── Tool preview cards ─── */
+  .preview-section {
+    width: 100%; max-width: 960px; padding: 0 24px;
+    margin: 0 auto 48px;
+  }
+  .preview-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .preview-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .preview-card:hover { border-color: rgba(232,80,10,0.4); transform: translateY(-2px); }
+  .preview-card-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .preview-card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .icon-sql { background: rgba(232,80,10,0.12); }
+  .icon-sem { background: rgba(249,115,22,0.12); }
+  .icon-dash { background: rgba(0,194,255,0.1); }
+  .icon-gov { background: rgba(251,191,36,0.1); }
+  .preview-card-title { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; color: var(--text); }
+  .preview-card-tag {
+    margin-left: auto; font-size: 0.65rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .tag-fabric { background: rgba(232,80,10,0.12); color: var(--accent); }
+  .tag-mstr { background: rgba(249,115,22,0.12); color: var(--accent2); }
+  .tag-gov { background: rgba(251,191,36,0.1); color: var(--warn); }
+  .tag-blue { background: rgba(0,194,255,0.1); color: var(--accent3); }
+
+  /* mini UI mockup inside preview card */
+  .preview-body { padding: 16px 20px; }
+  .mini-input {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px; font-family: var(--mono);
+    font-size: 0.7rem; color: #5c8a6e; margin-bottom: 10px; line-height: 1.6;
+  }
+  .mini-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+  .mini-badge {
+    font-size: 0.6rem; font-weight: 700; padding: 2px 7px;
+    border-radius: 3px; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;
+  }
+  .mb-crit { background: rgba(248,113,113,0.15); color: #f87171; }
+  .mb-warn { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .mb-pass { background: rgba(52,211,153,0.15); color: #34d399; }
+  .mb-info { background: rgba(0,194,255,0.12); color: #00c2ff; }
+  .mb-fab { background: rgba(232,80,10,0.12); color: #e8500a; }
+  .mini-text { font-size: 0.7rem; color: var(--muted); line-height: 1.4; }
+  .mini-score {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px; margin-bottom: 8px;
+  }
+  .mini-score-label { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+  .mini-score-val { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; }
+  .sv-green { color: #34d399; }
+  .sv-orange { color: #f97316; }
+  .sv-red { color: #f87171; }
+  .mini-promote {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .mini-sql { font-family: var(--mono); font-size: 0.65rem; color: #5c8a6e; background: rgba(92,138,110,0.1); padding: 1px 6px; border-radius: 3px; }
+  .mini-arrow { font-size: 0.65rem; color: var(--muted); }
+  .mini-obj { font-family: var(--mono); font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 3px; }
+  .obj-metric { background: rgba(232,80,10,0.12); color: #e8500a; }
+  .obj-attr { background: rgba(0,194,255,0.1); color: #00c2ff; }
+  .obj-filter { background: rgba(251,191,36,0.1); color: #fbbf24; }
+  .obj-fact { background: rgba(249,115,22,0.12); color: #f97316; }
+  .obj-prompt { background: rgba(167,139,250,0.12); color: #a78bfa; }
+  .mini-name { font-size: 0.68rem; font-weight: 600; color: var(--text); }
+  .mini-checklist { display: flex; flex-direction: column; gap: 5px; }
+  .mini-check { display: flex; align-items: center; gap: 7px; }
+  .mini-check-box {
+    width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 8px;
+  }
+  .mcb-on { background: var(--accent); color: white; }
+  .mcb-off { border: 1px solid var(--border); }
+  .mini-check-text { font-size: 0.7rem; color: var(--muted); }
+
+  /* ── Tech row ─────────── */
+  .tech-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; flex-wrap: wrap; margin-bottom: 44px; padding: 0 24px;
+  }
+  .tech-badge {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 0.72rem; color: var(--muted); font-weight: 500;
+  }
+  .tech-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Launch button ─────── */
+  .land-cta { text-align: center; padding-bottom: 60px; }
+  .btn-launch {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 18px 48px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, #e8500a, #bf3d06);
+    color: white; font-family: var(--display); font-size: 1.05rem; font-weight: 800;
+    cursor: pointer; transition: all 0.2s; letter-spacing: -0.3px;
+    box-shadow: 0 4px 28px rgba(232,80,10,0.4);
+  }
+  .btn-launch:hover { transform: translateY(-3px); box-shadow: 0 10px 40px rgba(232,80,10,0.55); }
+  .btn-launch-arrow { transition: transform 0.2s; font-size: 1.1rem; }
+  .btn-launch:hover .btn-launch-arrow { transform: translateX(5px); }
+  .land-footnote { margin-top: 20px; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+
+  /* ── Main app ─────────────────────────────────── */
+  .app {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(232,80,10,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,80,10,0.03) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+
+  .app-header-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .app-logo-row { display: flex; align-items: center; gap: 14px; }
+  .app-shield {
+    width: 34px; height: 40px; flex-shrink: 0;
+    background: linear-gradient(160deg, #e8500a, #bf3d06);
+    clip-path: polygon(50% 0%, 100% 18%, 100% 62%, 50% 100%, 0% 62%, 0% 18%);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--display); font-size: 0.85rem; color: white; font-weight: 800;
+  }
+  .app-title { font-family: var(--display); font-size: 1rem; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+  .app-subtitle-bar { font-size: 0.72rem; color: var(--muted); margin-top: 2px; font-family: var(--mono); }
+  .app-back-btn {
+    padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-family: var(--sans);
+    font-size: 0.78rem; cursor: pointer; transition: all 0.15s;
+  }
+  .app-back-btn:hover { color: var(--text); border-color: rgba(232,80,10,0.5); }
+
+  .tabs {
+    display: flex; gap: 4px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 4px; width: fit-content; margin-bottom: 28px;
+  }
+  .tab {
+    padding: 8px 20px; border-radius: 8px; border: none;
+    background: transparent; color: var(--muted);
+    font-family: var(--sans); font-size: 0.875rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .tab.active { background: var(--surface2); color: var(--accent); border: 1px solid var(--border); }
+  .tab:hover:not(.active) { color: var(--text); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: var(--mono); font-size: 0.78rem; font-weight: 600;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  textarea, select, input[type="text"] {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: var(--mono);
+    font-size: 0.85rem; padding: 12px 14px; outline: none;
+    transition: border-color 0.2s; resize: vertical;
+  }
+  textarea:focus, select:focus, input:focus { border-color: var(--accent); }
+  select { font-family: var(--sans); cursor: pointer; }
+  label { font-size: 0.78rem; color: var(--muted); display: block; margin-bottom: 6px; font-weight: 500; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .col { display: flex; flex-direction: column; }
+  .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .check-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; cursor: pointer;
+    transition: all 0.15s; user-select: none;
+  }
+  .check-item:hover { border-color: var(--accent); }
+  .check-item input[type="checkbox"] { display: none; }
+  .check-box {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 2px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+  }
+  .check-item.checked .check-box { background: var(--accent); border-color: var(--accent); color: #fff; font-size: 11px; }
+  .check-item.checked { border-color: rgba(232,80,10,0.3); background: rgba(232,80,10,0.04); }
+  .check-label { font-size: 0.82rem; color: var(--text); }
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 10px;
+    padding: 28px; text-align: center; cursor: pointer;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(232,80,10,0.02); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 28px; margin-bottom: 6px; }
+  .upload-text { color: var(--muted); font-size: 0.85rem; }
+  .upload-text strong { color: var(--accent); }
+  .previews { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+  .preview-thumb { width: 80px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px; border-radius: 8px; border: none;
+    font-family: var(--sans); font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: linear-gradient(135deg, #e8500a, #bf3d06); color: white; }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,80,10,0.3); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(232,80,10,0.4); }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .score-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 20px; font-family: var(--mono); font-size: 0.82rem; font-weight: 700; border: 2px solid; }
+  .score-A { color: #34d399; border-color: #34d399; background: rgba(52,211,153,0.08); }
+  .score-B { color: #86efac; border-color: #86efac; background: rgba(134,239,172,0.08); }
+  .score-C { color: var(--warn); border-color: var(--warn); background: rgba(251,191,36,0.08); }
+  .score-D { color: var(--danger); border-color: var(--danger); background: rgba(248,113,113,0.08); }
+  .finding { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--border); border-radius: 0 8px 8px 0; padding: 14px 16px; margin-bottom: 10px; }
+  .finding.critical { border-left-color: var(--danger); }
+  .finding.warning { border-left-color: var(--warn); }
+  .finding.info { border-left-color: var(--accent3); }
+  .finding.pass { border-left-color: var(--green); }
+  .finding-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .finding-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-critical { background: rgba(248,113,113,0.15); color: var(--danger); }
+  .badge-warning { background: rgba(251,191,36,0.15); color: var(--warn); }
+  .badge-info { background: rgba(0,194,255,0.12); color: var(--accent3); }
+  .badge-pass { background: rgba(52,211,153,0.15); color: var(--green); }
+  .finding-title { font-size: 0.875rem; font-weight: 600; }
+  .finding-body { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+  .finding-fix { margin-top: 8px; padding: 8px 12px; background: var(--bg); border-radius: 6px; font-family: var(--mono); font-size: 0.76rem; color: var(--green); white-space: pre-wrap; overflow-x: auto; }
+  .loader { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 48px; gap: 16px; }
+  .loader.show { display: flex; }
+  .spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--border); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loader-text { color: var(--muted); font-size: 0.85rem; font-family: var(--mono); }
+  .error-box { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); border-radius: 8px; padding: 14px 16px; color: var(--danger); font-size: 0.85rem; margin-bottom: 16px; display: none; }
+  .error-box.show { display: block; }
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+  .tip { background: rgba(0,194,255,0.05); border: 1px solid rgba(0,194,255,0.18); border-radius: 8px; padding: 12px 16px; font-size: 0.81rem; color: #67c8e8; margin-bottom: 20px; line-height: 1.6; }
+  .fabric-badge { background: rgba(0,120,212,0.1); border: 1px solid rgba(0,120,212,0.3); border-radius: 8px; padding: 10px 16px; font-size: 0.81rem; color: #5aa8f8; margin-bottom: 20px; line-height: 1.6; }
+  .mstr-info-badge { background: rgba(108,99,255,0.08); border: 1px solid rgba(108,99,255,0.25); border-radius: 8px; padding: 10px 16px; font-size: 0.81rem; color: #a09df0; margin-bottom: 20px; line-height: 1.6; }
+
+  @media (max-width: 640px) {
+    .row, .checklist-grid, .preview-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ LANDING ═══════════════════════ -->
+<div id="landing">
+
+  <!-- HERO -->
+  <div class="land-hero">
+    <div class="land-grid"></div>
+
+    <!-- Logo lockup -->
+    <div class="land-logos">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div class="cs-shield">CS</div>
+        <span style="font-family:var(--mono);font-size:0.6rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase">CarShield</span>
+      </div>
+      <div class="land-logo-sep"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div class="mstr-pill">μSTR</div>
+        <span style="font-family:var(--mono);font-size:0.6rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase">MicroStrategy</span>
+      </div>
+    </div>
+
+    <div class="land-eyebrow">BI Intelligence Tools &nbsp;·&nbsp; Internal Use Only</div>
+    <h1 class="land-title"><span class="land-title-accent">MicroStrategy</span><br>Review Studio</h1>
+    <p class="land-title-sub">Fabric SQL · Semantic Layer · Dossier QA</p>
+    <p class="land-desc">
+      An AI-powered peer review toolkit built for <strong>CarShield's BI & ETL team</strong>.
+      Catch Fabric SQL issues before they reach production, score your SQL's readiness for the
+      <strong>MicroStrategy semantic layer</strong>, and audit Dossiers &amp; Documents against
+      MicroStrategy ONE best practices — all in one place.
+    </p>
+  </div>
+
+  <!-- TOOL PREVIEW CARDS -->
+  <div class="preview-section">
+    <div class="preview-grid">
+
+      <!-- Card 1: SQL Reviewer -->
+      <div class="preview-card">
+        <div class="preview-card-header">
+          <div class="preview-card-icon icon-sql">⬡</div>
+          <div>
+            <div class="preview-card-title">SQL Reviewer</div>
+            <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">Fabric T-SQL · Performance · Correctness</div>
+          </div>
+          <span class="preview-card-tag tag-fabric">Fabric</span>
+        </div>
+        <div class="preview-body">
+          <div class="mini-input">SELECT r.region_name,<br>&nbsp;&nbsp;SUM(s.amount) AS revenue<br>FROM fact_sales s, dim_region r<br>WHERE s.region_id = r.id<br>GROUP BY 1</div>
+          <div class="mini-row"><span class="mini-badge mb-crit">Critical</span><span class="mini-text">Implicit JOIN — use explicit INNER JOIN syntax</span></div>
+          <div class="mini-row"><span class="mini-badge mb-warn">Warning</span><span class="mini-text">SELECT without alias on aggregate — clarify column intent</span></div>
+          <div class="mini-row"><span class="mini-badge mb-pass">Pass</span><span class="mini-text">GROUP BY is correctly scoped to non-aggregated columns</span></div>
+          <div class="mini-row"><span class="mini-badge mb-fab">Fabric</span><span class="mini-text">No unsupported syntax detected for Fabric Warehouse</span></div>
+        </div>
+      </div>
+
+      <!-- Card 2: Semantic Layer Scorecard -->
+      <div class="preview-card">
+        <div class="preview-card-header">
+          <div class="preview-card-icon icon-sem">🧠</div>
+          <div>
+            <div class="preview-card-title">Semantic Layer Scorecard</div>
+            <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">MicroStrategy Schema Promotion Analysis</div>
+          </div>
+          <span class="preview-card-tag tag-mstr">MicroStrategy</span>
+        </div>
+        <div class="preview-body">
+          <div class="mini-score">
+            <span class="mini-score-label">Promotability Score</span>
+            <span class="mini-score-val sv-green">82 / 100 &nbsp; B</span>
+          </div>
+          <div class="mini-score" style="margin-bottom:10px">
+            <span class="mini-score-label">Freeform SQL Risk</span>
+            <span class="mini-score-val sv-orange">MEDIUM</span>
+          </div>
+          <div class="mini-promote">
+            <span class="mini-sql">SUM(s.amount)</span>
+            <span class="mini-arrow">→</span>
+            <span class="mini-obj obj-metric">Metric</span>
+            <span class="mini-name">Revenue (Sum)</span>
+          </div>
+          <div class="mini-promote">
+            <span class="mini-sql">r.region_name</span>
+            <span class="mini-arrow">→</span>
+            <span class="mini-obj obj-attr">Attribute</span>
+            <span class="mini-name">Region Name</span>
+          </div>
+          <div class="mini-promote">
+            <span class="mini-sql">fiscal_year=2024</span>
+            <span class="mini-arrow">→</span>
+            <span class="mini-obj obj-prompt">Prompt</span>
+            <span class="mini-name">Fiscal Year Selector</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Dossier / Document Review -->
+      <div class="preview-card">
+        <div class="preview-card-header">
+          <div class="preview-card-icon icon-dash">◫</div>
+          <div>
+            <div class="preview-card-title">Dossier & Document Review</div>
+            <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">MicroStrategy ONE · Visual QA · UX Audit</div>
+          </div>
+          <span class="preview-card-tag tag-blue">Dossier</span>
+        </div>
+        <div class="preview-body">
+          <div class="mini-checklist">
+            <div class="mini-check"><div class="mini-check-box mcb-on">✓</div><span class="mini-check-text">Selectors target correct datasets</span></div>
+            <div class="mini-check"><div class="mini-check-box mcb-on">✓</div><span class="mini-check-text">Panel stack layers ≤ 3</span></div>
+            <div class="mini-check"><div class="mini-check-box mcb-off"></div><span class="mini-check-text">Intelligent Cube sized appropriately</span></div>
+            <div class="mini-check"><div class="mini-check-box mcb-off"></div><span class="mini-check-text">Security filters applied & tested</span></div>
+            <div class="mini-check"><div class="mini-check-box mcb-on">✓</div><span class="mini-check-text">KPI definitions match semantic layer</span></div>
+            <div class="mini-check"><div class="mini-check-box mcb-off"></div><span class="mini-check-text">Caching strategy defined</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Freeform SQL Governance -->
+      <div class="preview-card">
+        <div class="preview-card-header">
+          <div class="preview-card-icon icon-gov">⚠️</div>
+          <div>
+            <div class="preview-card-title">Freeform SQL Governance</div>
+            <div style="font-size:0.65rem;color:var(--muted);margin-top:2px">Consistency Risk · Schema Promotion Path</div>
+          </div>
+          <span class="preview-card-tag tag-gov">Governance</span>
+        </div>
+        <div class="preview-body">
+          <div class="mini-row" style="margin-bottom:10px"><span class="mini-badge" style="background:rgba(248,113,113,0.15);color:#f87171">HIGH RISK</span><span class="mini-text">Bypasses MicroStrategy security filters</span></div>
+          <div class="mini-row" style="margin-bottom:10px"><span class="mini-badge" style="background:rgba(248,113,113,0.15);color:#f87171">HIGH RISK</span><span class="mini-text">Metric logic differs from schema definition</span></div>
+          <div class="mini-row" style="margin-bottom:10px"><span class="mini-badge mb-warn">MEDIUM</span><span class="mini-text">No Intelligent Cube caching available</span></div>
+          <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:6px;padding:8px 10px;margin-top:4px">
+            <div style="font-size:0.65rem;font-weight:700;color:#34d399;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">→ Architecture Path</div>
+            <div style="font-size:0.68rem;color:var(--muted);line-height:1.5">Build Fabric view → define Fact + Attribute objects → create reusable Metric in schema</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TECH STACK -->
+  <div class="tech-row">
+    <div class="tech-badge"><span class="tech-dot" style="background:#e8500a"></span>Microsoft Fabric (T-SQL)</div>
+    <div class="tech-badge"><span class="tech-dot" style="background:#f97316"></span>MicroStrategy ONE</div>
+    <div class="tech-badge"><span class="tech-dot" style="background:#00c2ff"></span>Anthropic Claude AI</div>
+    <div class="tech-badge"><span class="tech-dot" style="background:#a78bfa"></span>Semantic Layer Analysis</div>
+    <div class="tech-badge"><span class="tech-dot" style="background:#34d399"></span>HTML · CSS · JavaScript</div>
+  </div>
+
+  <!-- CTA -->
+  <div class="land-cta">
+    <button class="btn-launch" onclick="launchApp()">
+      Launch Review Studio
+      <span class="btn-launch-arrow">→</span>
+    </button>
+    <div class="land-footnote">Built for CarShield BI &amp; ETL Team &nbsp;·&nbsp; Powered by Claude AI &nbsp;·&nbsp; v1.0 &nbsp;·&nbsp; Internal Use Only</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════════════════════ -->
+<div class="app" id="main-app" style="display:none">
+
+  <div class="app-header-bar">
+    <div class="app-logo-row">
+      <div class="app-shield">CS</div>
+      <div class="app-title-group">
+        <div class="app-title">MicroStrategy Review Studio</div>
+        <div class="app-subtitle-bar">CarShield BI &amp; ETL Team &nbsp;·&nbsp; Fabric + MicroStrategy ONE</div>
+      </div>
+    </div>
+    <button class="app-back-btn" onclick="goHome()">← Home</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('sql')">⬡ SQL + Semantic Review</button>
+    <button class="tab" onclick="switchTab('dashboard')">◫ Dossier / Document Review</button>
+  </div>
+
+  <!-- ===== SQL PANEL ===== -->
+  <div id="sql-panel" class="panel active">
+    <div class="tip">💡 Paste any Microsoft Fabric SQL query — SELECT, CTE, stored proc, or ETL transformation. Get a scored review covering Fabric compatibility, performance, correctness, style, <strong>plus</strong> an automatic MicroStrategy Semantic Layer Scorecard showing exactly which SQL elements should become Facts, Attributes, Metrics, Filters, or Prompts.</div>
+    <div class="fabric-badge" id="fabric-badge" style="display:none">
+      🏭 <strong>Fabric mode active</strong> — Reviewer will flag: unsupported ALTER TABLE forms, recursive CTEs, FOR JSON in subqueries, materialized views, triggers, varchar(max) Lakehouse truncation, endpoint read-only violations, cross-region issues, and more.
+    </div>
+
+    <div class="card">
+      <div class="card-title">⬡ Query Input</div>
+      <div class="row" style="margin-bottom:14px">
+        <div class="col">
+          <label>SQL Dialect</label>
+          <select id="sql-dialect" onchange="onDialectChange(this.value)">
+            <optgroup label="── Microsoft Fabric ──">
+              <option value="Fabric Warehouse">Fabric Warehouse (T-SQL)</option>
+              <option value="Fabric SQL Analytics Endpoint (Lakehouse)">Fabric SQL Analytics Endpoint (Lakehouse)</option>
+              <option value="Fabric SQL Analytics Endpoint (Mirrored DB)">Fabric SQL Analytics Endpoint (Mirrored DB)</option>
+              <option value="Fabric SQL Database">Fabric SQL Database</option>
+            </optgroup>
+            <optgroup label="── Other Dialects ──">
+              <option value="Snowflake">Snowflake</option>
+              <option value="BigQuery">BigQuery</option>
+              <option value="Redshift">Redshift</option>
+              <option value="SQL Server (T-SQL)">SQL Server (T-SQL)</option>
+              <option value="PostgreSQL">PostgreSQL</option>
+              <option value="MySQL">MySQL</option>
+              <option value="Databricks / Spark SQL">Databricks / Spark SQL</option>
+              <option value="Oracle">Oracle</option>
+              <option value="DuckDB">DuckDB</option>
+              <option value="Generic ANSI SQL">Generic ANSI SQL</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="col">
+          <label>Review Focus</label>
+          <select id="sql-focus">
+            <option>Full Review (all categories)</option>
+            <option>Performance & Optimization</option>
+            <option>Correctness & Logic</option>
+            <option>Style & Readability</option>
+            <option>Security (injection, permissions)</option>
+            <option>ETL / Pipeline suitability</option>
+          </select>
+        </div>
+      </div>
+      <label>SQL Query</label>
+      <textarea id="sql-input" rows="14" placeholder="-- Paste your SQL here
+SELECT
+    c.customer_id,
+    c.name,
+    SUM(o.amount) as total
+FROM customers c, orders o
+WHERE c.customer_id = o.customer_id
+GROUP BY 1, 2"></textarea>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⬡ Context (Optional)</div>
+      <div class="row">
+        <div class="col">
+          <label>Table Sizes / Row Counts</label>
+          <input type="text" id="sql-context-size" placeholder="e.g. orders: 500M rows, customers: 2M rows" />
+        </div>
+        <div class="col">
+          <label>Known Indexes / Cluster Keys</label>
+          <input type="text" id="sql-context-indexes" placeholder="e.g. orders clustered on order_date" />
+        </div>
+      </div>
+      <div class="col" style="margin-top:12px">
+        <label>Additional Notes</label>
+        <input type="text" id="sql-context-notes" placeholder="e.g. this runs in a nightly ETL job, latency sensitive" />
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="sql-btn" onclick="reviewSQL()">
+      ⚡ Run SQL Review
+    </button>
+    <button class="btn btn-ghost" style="margin-left:10px" onclick="clearSQL()">Clear</button>
+
+    <div class="error-box" id="sql-error"></div>
+
+    <div class="loader" id="sql-loader">
+      <div class="spinner"></div>
+      <div class="loader-text">Analyzing query...</div>
+    </div>
+
+    <div id="sql-results"></div>
+  </div>
+
+  <!-- ===== DASHBOARD PANEL ===== -->
+  <div id="dashboard-panel" class="panel">
+    <div class="tip">📊 MicroStrategy-specific peer review. Upload Dossier/Document screenshots, describe your dataset architecture, and Claude will review against MicroStrategy best practices — covering Intelligent Cubes, selectors, Freeform SQL usage, semantic layer hygiene, and more.</div>
+    <div class="mstr-info-badge">
+      🧠 <strong>MicroStrategy mode</strong> — Review covers: Dossier vs Document type, Intelligent Cube vs Freeform SQL usage, selector/panel stack design, dataset joins, derived metrics, prompt design, caching strategy, security filters, VLDB settings, and semantic layer alignment.
+    </div>
+
+    <div class="card">
+      <div class="card-title">◫ Screenshots (Dossier / Document)</div>
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="img-upload" accept="image/*" multiple onchange="handleImages(this)" />
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-text"><strong>Click or drag</strong> to upload screenshots<br>Dossier pages, Document panels, filter bars, visualizations — multiple allowed</div>
+      </div>
+      <div class="previews" id="previews"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">◫ Dashboard Info</div>
+      <div class="row" style="margin-bottom:14px">
+        <div class="col">
+          <label>Dossier / Document Name & Purpose</label>
+          <input type="text" id="dash-name" placeholder="e.g. Regional Sales Performance — Exec Dossier" />
+        </div>
+        <div class="col">
+          <label>Report Type</label>
+          <select id="dash-platform">
+            <option value="MicroStrategy Dossier">MicroStrategy Dossier (MicroStrategy ONE)</option>
+            <option value="MicroStrategy Document (Report Services)">MicroStrategy Document (Report Services)</option>
+            <option value="MicroStrategy Visual Insight Dashboard">MicroStrategy Visual Insight Dashboard</option>
+            <option value="MicroStrategy Report (Grid/Graph)">MicroStrategy Report (Grid/Graph)</option>
+            <option value="MicroStrategy Freeform SQL Report">MicroStrategy Freeform SQL Report</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" style="margin-bottom:14px">
+        <div class="col">
+          <label>Primary Audience</label>
+          <input type="text" id="dash-audience" placeholder="e.g. Regional VPs, Finance ops team" />
+        </div>
+        <div class="col">
+          <label>Key Business Questions</label>
+          <input type="text" id="dash-questions" placeholder="e.g. Revenue vs target by region, YoY variance" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <label>Data Source Type</label>
+          <select id="dash-datasource">
+            <option value="Intelligent Cube (In-Memory)">Intelligent Cube (In-Memory / OLAP)</option>
+            <option value="Direct Warehouse SQL">Direct Warehouse SQL (Live)</option>
+            <option value="Freeform SQL">Freeform SQL Report(s) as Dataset</option>
+            <option value="Mixed (Cube + Freeform)">Mixed — Cube + Freeform SQL datasets</option>
+            <option value="View Report">View Report(s) as Dataset</option>
+          </select>
+        </div>
+        <div class="col">
+          <label># of Datasets Used</label>
+          <input type="text" id="dash-datasets" placeholder="e.g. 3 datasets, 2 cubes + 1 freeform" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">◫ MicroStrategy Review Checklist</div>
+      <div class="checklist-grid" id="checklist">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">◫ Metric / Filter Logic (Optional but Recommended)</div>
+      <label>Paste MicroStrategy metric definitions, derived metrics, filter expressions, prompt definitions, or Freeform SQL used as dataset</label>
+      <textarea id="dash-logic" rows="8" placeholder="e.g.
+-- Metric: Revenue YTD
+SUM(fact_sales.amount) {~+, Year<=CurrentYear, Month<=CurrentMonth}
+
+-- Derived Metric: Gross Margin %
+(Revenue - Cost) / Revenue * 100
+
+-- Freeform SQL dataset:
+SELECT region_id, SUM(amount) as revenue
+FROM fact_sales
+WHERE fiscal_year = 2024
+GROUP BY region_id
+
+-- Prompt: Year selector (static list 2020-2025)"></textarea>
+    </div>
+
+    <button class="btn btn-primary" id="dash-btn" onclick="reviewDashboard()">
+      🔍 Run MicroStrategy Review
+    </button>
+    <button class="btn btn-ghost" style="margin-left:10px" onclick="clearDashboard()">Clear</button>
+
+    <div class="error-box" id="dash-error"></div>
+
+    <div class="loader" id="dash-loader">
+      <div class="spinner"></div>
+      <div class="loader-text">Reviewing MicroStrategy dashboard...</div>
+    </div>
+
+    <div id="dash-results"></div>
+  </div>
+
+</div><!-- /main-app -->
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  DEPLOYMENT CONFIG — update PROXY_URL after deploying your
+//  Cloudflare Worker (see DEPLOYMENT_GUIDE.md)
+// ════════════════════════════════════════════════════════════
+const PROXY_URL = window.PROXY_URL || 'https://YOUR-WORKER.YOUR-SUBDOMAIN.workers.dev';
+
+// ---- Landing screen ----
+function launchApp() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+function goHome() {
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('landing').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
+// ---- Fabric badge ----
+function onDialectChange(val) {
+  const badge = document.getElementById('fabric-badge');
+  badge.style.display = val.toLowerCase().includes('fabric') ? 'block' : 'none';
+}
+// Show badge on load since Fabric is default
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('sql-dialect');
+  onDialectChange(sel.value);
+});
+
+// ---- Tab switching ----
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tab + '-panel').classList.add('active');
+}
+
+// ---- Checklist items (MicroStrategy-specific) ----
+const checklistItems = [
+  // Data Architecture
+  { id: 'freeform', label: '🚫 Freeform SQL usage — should it be promoted to schema objects?' },
+  { id: 'cube', label: '🧊 Intelligent Cube sized appropriately (not over-fetching)' },
+  { id: 'datasets', label: '📦 Dataset count minimized (avoid Cartesian joins)' },
+  { id: 'derived_metrics', label: '📐 Derived metrics defined in schema vs. in-report' },
+  { id: 'metric_defs', label: '📊 Metric definitions match enterprise semantic layer' },
+  // MicroStrategy UX & Design
+  { id: 'selectors', label: '🔽 Selectors/Panels target correct datasets' },
+  { id: 'prompts', label: '💬 Prompts are intuitive and default values set' },
+  { id: 'panel_stacks', label: '🗂️ Panel stack layers ≤ 3 and logically organized' },
+  { id: 'filters', label: '🔗 Report/Chapter/Page filters applied at correct scope' },
+  { id: 'drilldown', label: '🔍 Drill-through / drill-across paths verified' },
+  // Visual & Grammar
+  { id: 'grammar', label: '✏️ Grammar, spelling & title consistency' },
+  { id: 'tooltips', label: '💬 Tooltips and info windows are accurate' },
+  { id: 'numbers', label: '🔢 Number formats, nulls, and zero-display correct' },
+  { id: 'colors', label: '🎨 Color palette consistent with style guide' },
+  { id: 'dates', label: '📅 Date/fiscal calendar logic verified' },
+  // Performance & Caching
+  { id: 'caching', label: '⚡ Caching strategy defined (report/cube cache)' },
+  { id: 'security_filters', label: '🔒 Security filters applied and tested' },
+  { id: 'vldb', label: '⚙️ VLDB properties reviewed for this report type' },
+  { id: 'export', label: '📤 Excel/PDF export layout reviewed' },
+  { id: 'mobile', label: '📱 Mobile / Library view tested' },
+];
+
+const checklist = document.getElementById('checklist');
+checklistItems.forEach(item => {
+  const el = document.createElement('label');
+  el.className = 'check-item';
+  el.innerHTML = `
+    <input type="checkbox" id="chk-${item.id}" value="${item.id}" />
+    <div class="check-box">✓</div>
+    <span class="check-label">${item.label}</span>
+  `;
+  el.onclick = () => {
+    el.classList.toggle('checked');
+    el.querySelector('input').checked = el.classList.contains('checked');
+  };
+  checklist.appendChild(el);
+});
+
+// ---- Image upload ----
+let uploadedImages = [];
+
+function handleImages(input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedImages.push({ name: file.name, dataUrl: e.target.result });
+      renderPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviews() {
+  const container = document.getElementById('previews');
+  container.innerHTML = uploadedImages.map((img, i) =>
+    `<img class="preview-thumb" src="${img.dataUrl}" title="${img.name}" />`
+  ).join('');
+}
+
+// ---- Show/hide helpers ----
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.classList.add('show');
+}
+function hideError(id) { document.getElementById(id).classList.remove('show'); }
+function showLoader(id) { document.getElementById(id).classList.add('show'); }
+function hideLoader(id) { document.getElementById(id).classList.remove('show'); }
+
+// ---- Render findings ----
+function renderFindings(findings) {
+  return findings.map(f => `
+    <div class="finding ${f.severity}">
+      <div class="finding-header">
+        <span class="finding-badge badge-${f.severity}">${f.severity}</span>
+        <span class="finding-title">${f.title}</span>
+      </div>
+      <div class="finding-body">${f.body}</div>
+      ${f.fix ? `<div class="finding-fix">${f.fix}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function scoreColor(score) {
+  if (score >= 90) return 'A';
+  if (score >= 75) return 'B';
+  if (score >= 60) return 'C';
+  return 'D';
+}
+
+// ---- SQL Review ----
+async function reviewSQL() {
+  const sql = document.getElementById('sql-input').value.trim();
+  if (!sql) { showError('sql-error', 'Please paste a SQL query to review.'); return; }
+  hideError('sql-error');
+  document.getElementById('sql-results').innerHTML = '';
+  const btn = document.getElementById('sql-btn');
+  btn.disabled = true;
+  showLoader('sql-loader');
+
+  const dialect = document.getElementById('sql-dialect').value;
+  const focus = document.getElementById('sql-focus').value;
+  const sizes = document.getElementById('sql-context-size').value;
+  const indexes = document.getElementById('sql-context-indexes').value;
+  const notes = document.getElementById('sql-context-notes').value;
+
+  const isFabric = dialect.toLowerCase().includes('fabric');
+  const fabricContext = isFabric ? `
+MICROSOFT FABRIC-SPECIFIC RULES — apply these rigorously:
+
+Fabric Warehouse / SQL Analytics Endpoint known limitations & gotchas:
+1. UNSUPPORTED STATEMENTS — flag as critical if present:
+   - ALTER TABLE (only ADD nullable columns, DROP COLUMN, ADD/DROP NOT ENFORCED constraints allowed)
+   - BULK LOAD, CREATE USER, FOR XML, SET ROWCOUNT, SET TRANSACTION ISOLATION LEVEL
+   - Recursive CTEs (not supported), Materialized views, Triggers, Synonyms
+   - FOR JSON only allowed as final operator — not inside subqueries
+   - Manually created multi-column statistics
+   - PREDICT, sp_showspaceused
+
+2. SQL ANALYTICS ENDPOINT SPECIFIC (Lakehouse endpoint):
+   - READ-ONLY: INSERT/UPDATE/DELETE/CREATE TABLE not supported on Lakehouse endpoint
+   - Data must be in Delta Parquet in /tables folder — tables in /files are invisible
+   - Delta column mapping by ID not supported (by name only)
+   - varchar(max): only supported on mirrored items/Fabric DBs, NOT Lakehouses (truncated to 8KB)
+   - varchar(max) joins between Lakehouse and mirrored tables may silently return wrong results
+   - Foreign key constraints block further schema changes — warn if FK is added
+   - Schemas named sys, information_schema, db_owner, db_datareader not allowed
+
+3. FABRIC WAREHOUSE SPECIFIC:
+   - Temp tables (#temp) are session-scoped and supported
+   - MERGE is supported (GA)
+   - Standard, sequential, and nested CTEs supported (nested is preview)
+   - Only a subset of query/join hints supported — flag unsupported hints
+   - sp_rename supported for column renaming
+
+4. PERFORMANCE (Fabric-specific):
+   - No traditional indexes — Fabric uses automatic statistics; manual multi-column stats unsupported
+   - Avoid SELECT * on large Delta tables; column pruning is critical
+   - Cross-region workspace connections not supported and will fail
+   - Predicate pushdown works best with simple filter expressions on partition columns
+   - Large string operations on varchar columns near 8KB limit may silently truncate
+
+5. DATA TYPES:
+   - Not all Spark Delta types map to Fabric SQL types — complex/nested types may be missing
+   - Use varchar(8000) explicitly on Lakehouse endpoint to avoid truncation surprises
+
+Dialect context: ${dialect}` : `Dialect: ${dialect}`;
+
+  const prompt = `You are a senior BI/ETL engineer and SQL code reviewer specializing in Microsoft Fabric and modern cloud data warehouses. Review the following SQL query and return ONLY a valid JSON object with this exact structure:
+
+{
+  "score": <number 0-100>,
+  "summary": "<2-3 sentence overall assessment>",
+  "findings": [
+    {
+      "severity": "critical|warning|info|pass",
+      "category": "<Performance|Correctness|Style|Security|ETL|Fabric Compatibility>",
+      "title": "<short title>",
+      "body": "<explanation of issue or positive note>",
+      "fix": "<corrected SQL snippet or null>"
+    }
+  ]
+}
+
+Rules:
+- "critical" = bugs, data integrity issues, security holes, unsupported syntax, major performance killers
+- "warning" = suboptimal patterns, potential issues, style violations, Fabric gotchas
+- "info" = suggestions, best practices, minor improvements
+- "pass" = things done well (include at least 1-2 pass items)
+- fix field: provide corrected SQL only when fix is actionable; use null otherwise
+- Include 6-12 findings total covering all relevant aspects
+- Review Focus: ${focus}
+
+${fabricContext}
+${sizes ? `- Table context: ${sizes}` : ''}
+${indexes ? `- Index/cluster context: ${indexes}` : ''}
+${notes ? `- Developer notes: ${notes}` : ''}
+
+SQL to review:
+\`\`\`sql
+${sql}
+\`\`\`
+
+Return ONLY the JSON object. No markdown, no explanation, no backticks.`;
+
+  // Second API call: Semantic Layer Scorecard
+  const semPrompt = `You are a MicroStrategy semantic layer architect. Analyze this SQL query and evaluate how promotable it is from Freeform SQL to proper MicroStrategy schema objects. Return ONLY a valid JSON object:
+
+{
+  "semantic_score": <number 0-100, where 100 = fully promotable to clean schema objects>,
+  "freeform_risk": "low|medium|high",
+  "summary": "<2-3 sentences on how well this SQL maps to MicroStrategy semantic layer objects>",
+  "promotions": [
+    {
+      "sql_element": "<exact SQL fragment or alias>",
+      "mstr_object_type": "Fact|Attribute|Metric|Filter|Prompt|Transformation|Consolidation|Hierarchy",
+      "suggested_name": "<proposed MicroStrategy object name>",
+      "notes": "<why this should be a schema object and any caveats>"
+    }
+  ],
+  "risks": [
+    {
+      "risk": "<description of governance/consistency risk if left as Freeform SQL>",
+      "severity": "high|medium|low"
+    }
+  ],
+  "architecture_recommendations": "<2-3 sentences on the best path to promote this SQL to the MicroStrategy semantic layer, including what Fabric views/tables to build first>"
+}
+
+MicroStrategy Semantic Layer Promotion Rules:
+- SUM/AVG/COUNT of a column → Metric (with proper metric definition and level)
+- Dimension/lookup columns → Attributes (with attribute forms, ID + description)
+- Fact table numeric columns → Facts
+- WHERE clause conditions → Filters or Prompts (if parameterizable)
+- CASE expressions for classification → Consolidations or Custom Groups
+- Date arithmetic → Transformations
+- Hardcoded date ranges → Prompts (date range prompt)
+- JOINs between fact and dimension tables → Attribute relationships in schema
+- Repeated subqueries → Intelligent Cube candidates
+- Business logic in SQL (e.g. status='Active') → Filter objects
+- Column aliases that are business terms → should be Metric or Attribute names
+
+Rate semantic_score low if: many hardcoded filters, complex CASE logic, non-standard joins, CTEs that hide reusable logic.
+Rate semantic_score high if: simple aggregations of clean fact/dim tables, clear attribute and metric candidates visible.
+
+SQL:
+\`\`\`sql
+${sql}
+\`\`\`
+
+Return ONLY the JSON. No markdown, no backticks.`;
+
+  try {
+    const callAPI = (p) => fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: p }] })
+    }).then(r => r.json());
+
+    const [data, semData] = await Promise.all([callAPI(prompt), callAPI(semPrompt)]);
+
+    const raw = data.content?.map(b => b.text || '').join('');
+    const result = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    const semRaw = semData.content?.map(b => b.text || '').join('');
+    const sem = JSON.parse(semRaw.replace(/```json|```/g, '').trim());
+
+    const grade = scoreColor(result.score);
+    const semGrade = scoreColor(sem.semantic_score);
+    const riskColor = sem.freeform_risk === 'high' ? 'var(--danger)' : sem.freeform_risk === 'medium' ? 'var(--warn)' : 'var(--accent)';
+
+    const promotionRows = (sem.promotions || []).map(p => `
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+          <code style="font-family:var(--mono);font-size:0.78rem;color:var(--accent);background:rgba(0,229,176,0.08);padding:2px 8px;border-radius:4px">${p.sql_element}</code>
+          <span style="color:var(--muted);font-size:0.75rem">→</span>
+          <span style="font-size:0.75rem;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(108,99,255,0.15);color:var(--accent2)">${p.mstr_object_type}</span>
+          <strong style="font-size:0.82rem;color:var(--text)">${p.suggested_name}</strong>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted)">${p.notes}</div>
+      </div>`).join('');
+
+    const riskRows = (sem.risks || []).map(r => `
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:4px;flex-shrink:0;margin-top:2px;background:${r.severity==='high'?'rgba(255,95,109,0.15)':r.severity==='medium'?'rgba(255,179,71,0.15)':'rgba(0,229,176,0.1)'};color:${r.severity==='high'?'var(--danger)':r.severity==='medium'?'var(--warn)':'var(--accent)'}">${r.severity}</span>
+        <span style="font-size:0.82rem;color:var(--muted);line-height:1.5">${r.risk}</span>
+      </div>`).join('');
+
+    document.getElementById('sql-results').innerHTML = `
+      <hr class="section-divider" />
+      <div class="results-header">
+        <h2 style="font-family:var(--mono);font-size:1rem;color:var(--text)">SQL Review Results</h2>
+        <span class="score-badge score-${grade}">SQL Score: ${result.score}/100 &nbsp; ${grade}</span>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">⬡ Summary</div>
+        <p style="font-size:0.875rem;line-height:1.7;color:var(--text)">${result.summary}</p>
+      </div>
+      <div class="card-title" style="margin-bottom:14px">⬡ SQL Findings</div>
+      ${renderFindings(result.findings)}
+
+      <hr class="section-divider" style="margin-top:28px" />
+      <div class="results-header" style="margin-top:20px">
+        <h2 style="font-family:var(--mono);font-size:1rem;color:var(--text)">🧠 Semantic Layer Scorecard</h2>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="score-badge score-${semGrade}">Promotability: ${sem.semantic_score}/100</span>
+          <span style="font-size:0.78rem;font-weight:700;padding:6px 14px;border-radius:20px;border:2px solid ${riskColor};color:${riskColor};background:transparent">Freeform Risk: ${sem.freeform_risk.toUpperCase()}</span>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title" style="color:var(--accent2)">🔷 Semantic Layer Summary</div>
+        <p style="font-size:0.875rem;line-height:1.7;color:var(--text)">${sem.summary}</p>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title" style="color:var(--accent2)">🔷 Promote to MicroStrategy Schema Objects</div>
+        ${promotionRows || '<p style="font-size:0.83rem;color:var(--muted)">No clear promotion candidates found.</p>'}
+      </div>
+      ${riskRows ? `<div class="card" style="margin-bottom:16px">
+        <div class="card-title" style="color:var(--warn)">⚠️ Governance & Consistency Risks (if kept as Freeform SQL)</div>
+        ${riskRows}
+      </div>` : ''}
+      <div class="card">
+        <div class="card-title" style="color:var(--accent2)">🔷 Architecture Path Forward</div>
+        <p style="font-size:0.875rem;line-height:1.7;color:var(--text)">${sem.architecture_recommendations}</p>
+      </div>
+    `;
+  } catch(e) {
+    showError('sql-error', 'Review failed — ' + (e.message || 'unexpected error'));
+  }
+
+  hideLoader('sql-loader');
+  btn.disabled = false;
+}
+
+function clearSQL() {
+  document.getElementById('sql-input').value = '';
+  document.getElementById('sql-results').innerHTML = '';
+  hideError('sql-error');
+}
+
+// ---- Dashboard Review ----
+async function reviewDashboard() {
+  const name = document.getElementById('dash-name').value.trim();
+  const platform = document.getElementById('dash-platform').value;
+  const audience = document.getElementById('dash-audience').value.trim();
+  const questions = document.getElementById('dash-questions').value.trim();
+  const logic = document.getElementById('dash-logic').value.trim();
+
+  const checkedItems = [...document.querySelectorAll('#checklist input:checked')].map(i => i.value);
+
+  const hasImages = uploadedImages.length > 0;
+  const hasInfo = name || audience;
+
+  if (!hasImages && !hasInfo && !logic) {
+    showError('dash-error', 'Please upload at least one screenshot or fill in dashboard details.');
+    return;
+  }
+
+  hideError('dash-error');
+  document.getElementById('dash-results').innerHTML = '';
+  const btn = document.getElementById('dash-btn');
+  btn.disabled = true;
+  showLoader('dash-loader');
+
+  const checklistText = checkedItems.length > 0
+    ? `The reviewer has flagged these specific areas for focus: ${checkedItems.join(', ')}.`
+    : 'Perform a comprehensive review across all areas.';
+
+  const datasource = document.getElementById('dash-datasource').value;
+  const datasets = document.getElementById('dash-datasets').value;
+
+  const textPrompt = `You are a senior MicroStrategy BI architect and developer doing a peer review of a MicroStrategy report or dashboard. Return ONLY a valid JSON object:
+
+{
+  "score": <number 0-100>,
+  "summary": "<2-3 sentence overall assessment>",
+  "findings": [
+    {
+      "severity": "critical|warning|info|pass",
+      "category": "<Semantic Layer|Data Architecture|MicroStrategy UX|Visual Design|Grammar & Labels|Performance & Caching|Security|Freeform SQL Risk>",
+      "title": "<short title>",
+      "body": "<detailed explanation with MicroStrategy-specific reasoning>",
+      "fix": "<specific MicroStrategy recommendation, object type to use, or null>"
+    }
+  ]
+}
+
+MicroStrategy Report Details:
+- Name/Purpose: ${name || 'Not specified'}
+- Report Type: ${platform}
+- Data Source: ${datasource}
+- Datasets: ${datasets || 'Not specified'}
+- Audience: ${audience || 'Not specified'}
+- Key Questions: ${questions || 'Not specified'}
+- Checklist focus areas: ${checklistText}
+${logic ? `
+Metric/Filter/SQL definitions provided:
+${logic}` : ''}
+
+${!hasImages ? 'No screenshots — base review on definitions and metadata above.' : `${uploadedImages.length} screenshot(s) provided — review visual and UX from images.`}
+
+MICROSTRATEGY-SPECIFIC REVIEW RULES:
+1. FREEFORM SQL RISKS — flag any Freeform SQL usage: it bypasses the MicroStrategy SQL Engine, cannot use security filters, transformations, custom groups, or consolidations. Flag if metrics from Freeform reports don't match definitions in the semantic layer.
+2. SEMANTIC LAYER ALIGNMENT — flag hardcoded logic (date ranges, filters, calculations) that should be defined as: Facts, Attributes, Metrics, Filters, Prompts, or Transformations in the MicroStrategy schema. Identify "promoted to schema" opportunities.
+3. DATASET ARCHITECTURE — flag: too many datasets (risks Cartesian joins), Freeform SQL used where Intelligent Cube is more appropriate, datasets containing unused attributes/metrics, derived metrics aggregated twice (View Report → Document grid).
+4. INTELLIGENT CUBE DESIGN — flag if cube contains too many rows (slow refresh), missing filters on the cube (over-fetching), or if direct-live queries would be more appropriate.
+5. SELECTOR & PANEL DESIGN — selectors should target specific datasets. Panel stacks > 3 layers hurt UX. Selectors with many items increase server execution time dramatically.
+6. METRIC CONSISTENCY — flag if derived metrics are defined in-report when they should be reusable schema metrics. Multiple reports answering the same business question with different SQL = governance risk.
+7. CACHING — flag missing cache schedule for heavily used cubes. Flag reports with no caching set for high-concurrency environments.
+8. SECURITY — flag missing security filters, row-level security not applied, or sensitive data exposed.
+9. VLDB PROPERTIES — flag if intermediate table type, join behavior, or other VLDB settings seem mismatched for the use case.
+10. GRAMMAR & UX — titles, metric names, tooltip text, prompt text grammar, null handling, number formatting.
+
+Include 8-16 findings. Severity rules:
+- critical = broken metric logic, Freeform SQL bypassing security filters, Cartesian joins in datasets, misleading data
+- warning = Freeform SQL promotable to schema, in-report metrics that should be schema objects, performance risks, UX issues
+- info = best practice improvements, refactoring suggestions, naming conventions
+- pass = things done correctly per MicroStrategy best practices
+
+Return ONLY the JSON. No markdown, no backticks.`;
+
+  try {
+    let messageContent;
+
+    if (hasImages) {
+      messageContent = [
+        ...uploadedImages.map(img => ({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: img.dataUrl.split(';')[0].split(':')[1],
+            data: img.dataUrl.split(',')[1]
+          }
+        })),
+        { type: 'text', text: textPrompt }
+      ];
+    } else {
+      messageContent = textPrompt;
+    }
+
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: messageContent }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = data.content?.map(b => b.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+
+    const grade = scoreColor(result.score);
+    document.getElementById('dash-results').innerHTML = `
+      <hr class="section-divider" />
+      <div class="results-header">
+        <h2 style="font-family:var(--mono);font-size:1rem;color:var(--text)">Review Results</h2>
+        <span class="score-badge score-${grade}">Score: ${result.score}/100 &nbsp; ${grade}</span>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">◫ Summary</div>
+        <p style="font-size:0.875rem;line-height:1.7;color:var(--text)">${result.summary}</p>
+      </div>
+      <div class="card-title" style="margin-bottom:14px">◫ Findings</div>
+      ${renderFindings(result.findings)}
+    `;
+  } catch(e) {
+    showError('dash-error', 'Review failed — ' + (e.message || 'unexpected error'));
+  }
+
+  hideLoader('dash-loader');
+  btn.disabled = false;
+}
+
+function clearDashboard() {
+  document.getElementById('dash-name').value = '';
+  document.getElementById('dash-audience').value = '';
+  document.getElementById('dash-questions').value = '';
+  document.getElementById('dash-logic').value = '';
+  document.getElementById('dash-datasets').value = '';
+  document.getElementById('img-upload').value = '';
+  uploadedImages = [];
+  renderPreviews();
+  document.querySelectorAll('.check-item').forEach(el => {
+    el.classList.remove('checked');
+    el.querySelector('input').checked = false;
+  });
+  document.getElementById('dash-results').innerHTML = '';
+  hideError('dash-error');
+}
+</script>
+</body>
+</html>
