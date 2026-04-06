@@ -927,11 +927,19 @@ ${sql}
 Return ONLY the JSON. No markdown, no backticks.`;
 
   try {
-    const callAPI = (p) => fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 8000, messages: [{ role: 'user', content: p }] })
-    }).then(r => r.json());
+    const callAPI = async (p) => {
+      const resp = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 8000, messages: [{ role: 'user', content: p }] })
+      });
+      const json = await resp.json();
+      // Debug: log raw response to console
+      console.log('API response:', JSON.stringify(json).substring(0, 500));
+      console.log('Stop reason:', json.stop_reason);
+      console.log('Content length:', json.content?.[0]?.text?.length);
+      return json;
+    };
 
     const [data, semData] = await Promise.all([callAPI(prompt), callAPI(semPrompt)]);
 
@@ -1019,7 +1027,8 @@ Return ONLY the JSON. No markdown, no backticks.`;
       </div>
     `;
   } catch(e) {
-    showError('sql-error', 'Review failed — ' + (e.message || 'unexpected error'));
+    console.error('Full error:', e);
+    showError('sql-error', 'Review failed — ' + (e.message || 'unexpected error') + ' | Check browser console (F12) for details');
   }
 
   hideLoader('sql-loader');
