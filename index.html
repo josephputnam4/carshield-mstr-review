@@ -942,7 +942,7 @@ Return ONLY the JSON. No markdown, no backticks.`;
     const callAPI = (p) => fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: p }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: p }] })
     }).then(r => r.json());
 
     const [data, semData] = await Promise.all([callAPI(prompt), callAPI(semPrompt)]);
@@ -1138,7 +1138,7 @@ Return ONLY the JSON. No markdown, no backticks.`;
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 4000,
         messages: [{ role: 'user', content: messageContent }]
       })
     });
