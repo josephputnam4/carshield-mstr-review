@@ -944,14 +944,33 @@ Return ONLY the JSON. No markdown, no backticks.`;
     const [data, semData] = await Promise.all([callAPI(prompt), callAPI(semPrompt)]);
 
     const safeParseJSON = (text) => {
-      let clean = text.replace(/```json|```/g, '').trim();
-      // Find the outermost { } block
-      const start = clean.indexOf('{');
-      const end = clean.lastIndexOf('}');
-      if (start !== -1 && end !== -1 && end > start) {
-        clean = clean.slice(start, end + 1);
+      // Strip markdown fences
+      let clean = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      // Find outermost complete JSON object using brace matching
+      let depth = 0, start = -1, end = -1;
+      for (let i = 0; i < clean.length; i++) {
+        const ch = clean[i];
+        // Skip characters inside strings
+        if (ch === '"') {
+          i++;
+          while (i < clean.length) {
+            if (clean[i] === '\\') { i++; }
+            else if (clean[i] === '"') { break; }
+            i++;
+          }
+          continue;
+        }
+        if (ch === '{') { if (depth === 0) start = i; depth++; }
+        else if (ch === '}') { depth--; if (depth === 0) { end = i; break; } }
       }
-      return JSON.parse(clean);
+      if (start !== -1 && end !== -1) clean = clean.slice(start, end + 1);
+      try {
+        return JSON.parse(clean);
+      } catch(e) {
+        console.error('JSON parse failed. Raw text length:', text.length);
+        console.error('Clean text sample:', clean.substring(0, 300));
+        throw e;
+      }
     };
 
     const raw = data.content?.map(b => b.text || '').join('');
@@ -1153,13 +1172,29 @@ Return ONLY the JSON. No markdown, no backticks.`;
 
     const data = await res.json();
     const safeParseJSON2 = (text) => {
-      let clean = text.replace(/```json|```/g, '').trim();
-      const start = clean.indexOf('{');
-      const end = clean.lastIndexOf('}');
-      if (start !== -1 && end !== -1 && end > start) {
-        clean = clean.slice(start, end + 1);
+      let clean = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+      let depth = 0, start = -1, end = -1;
+      for (let i = 0; i < clean.length; i++) {
+        const ch = clean[i];
+        if (ch === '"') {
+          i++;
+          while (i < clean.length) {
+            if (clean[i] === '\\') { i++; }
+            else if (clean[i] === '"') { break; }
+            i++;
+          }
+          continue;
+        }
+        if (ch === '{') { if (depth === 0) start = i; depth++; }
+        else if (ch === '}') { depth--; if (depth === 0) { end = i; break; } }
       }
-      return JSON.parse(clean);
+      if (start !== -1 && end !== -1) clean = clean.slice(start, end + 1);
+      try {
+        return JSON.parse(clean);
+      } catch(e) {
+        console.error('Dashboard JSON parse failed:', clean.substring(0, 300));
+        throw e;
+      }
     };
     const raw = data.content?.map(b => b.text || '').join('');
     const result = safeParseJSON2(raw);
