@@ -876,7 +876,7 @@ Rules:
 - "info" = suggestions, best practices, minor improvements
 - "pass" = things done well (include at least 1-2 pass items)
 - fix field: provide corrected SQL only when fix is actionable; use null otherwise
-- Include 6-12 findings total covering all relevant aspects
+- Include 5-8 findings total — be concise, prioritize the most important
 - Review Focus: ${focus}
 
 ${fabricContext}
@@ -898,20 +898,8 @@ Return ONLY the JSON object. No markdown, no explanation, no backticks.`;
   "semantic_score": <number 0-100, where 100 = fully promotable to clean schema objects>,
   "freeform_risk": "low|medium|high",
   "summary": "<2-3 sentences on how well this SQL maps to MicroStrategy semantic layer objects>",
-  "promotions": [
-    {
-      "sql_element": "<exact SQL fragment or alias>",
-      "mstr_object_type": "Fact|Attribute|Metric|Filter|Prompt|Transformation|Consolidation|Hierarchy",
-      "suggested_name": "<proposed MicroStrategy object name>",
-      "notes": "<why this should be a schema object and any caveats>"
-    }
-  ],
-  "risks": [
-    {
-      "risk": "<description of governance/consistency risk if left as Freeform SQL>",
-      "severity": "high|medium|low"
-    }
-  ],
+  "promotions": [{"sql_element":"<fragment>","mstr_object_type":"Fact|Attribute|Metric|Filter|Prompt","suggested_name":"<name>","notes":"<why>"}],
+  "risks": [{"risk":"<risk description>","severity":"high|medium|low"}],
   "architecture_recommendations": "<2-3 sentences on the best path to promote this SQL to the MicroStrategy semantic layer, including what Fabric views/tables to build first>"
 }
 
@@ -942,16 +930,27 @@ Return ONLY the JSON. No markdown, no backticks.`;
     const callAPI = (p) => fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: p }] })
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 8000, messages: [{ role: 'user', content: p }] })
     }).then(r => r.json());
 
     const [data, semData] = await Promise.all([callAPI(prompt), callAPI(semPrompt)]);
 
+    const safeParseJSON = (text) => {
+      let clean = text.replace(/```json|```/g, '').trim();
+      // Find the outermost { } block
+      const start = clean.indexOf('{');
+      const end = clean.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        clean = clean.slice(start, end + 1);
+      }
+      return JSON.parse(clean);
+    };
+
     const raw = data.content?.map(b => b.text || '').join('');
-    const result = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    const result = safeParseJSON(raw);
 
     const semRaw = semData.content?.map(b => b.text || '').join('');
-    const sem = JSON.parse(semRaw.replace(/```json|```/g, '').trim());
+    const sem = safeParseJSON(semRaw);
 
     const grade = scoreColor(result.score);
     const semGrade = scoreColor(sem.semantic_score);
@@ -1106,7 +1105,7 @@ MICROSTRATEGY-SPECIFIC REVIEW RULES:
 9. VLDB PROPERTIES — flag if intermediate table type, join behavior, or other VLDB settings seem mismatched for the use case.
 10. GRAMMAR & UX — titles, metric names, tooltip text, prompt text grammar, null handling, number formatting.
 
-Include 8-16 findings. Severity rules:
+Include 6-10 findings — be concise. Severity rules:
 - critical = broken metric logic, Freeform SQL bypassing security filters, Cartesian joins in datasets, misleading data
 - warning = Freeform SQL promotable to schema, in-report metrics that should be schema objects, performance risks, UX issues
 - info = best practice improvements, refactoring suggestions, naming conventions
@@ -1138,15 +1137,23 @@ Return ONLY the JSON. No markdown, no backticks.`;
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
+        max_tokens: 8000,
         messages: [{ role: 'user', content: messageContent }]
       })
     });
 
     const data = await res.json();
+    const safeParseJSON2 = (text) => {
+      let clean = text.replace(/```json|```/g, '').trim();
+      const start = clean.indexOf('{');
+      const end = clean.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        clean = clean.slice(start, end + 1);
+      }
+      return JSON.parse(clean);
+    };
     const raw = data.content?.map(b => b.text || '').join('');
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const result = JSON.parse(clean);
+    const result = safeParseJSON2(raw);
 
     const grade = scoreColor(result.score);
     document.getElementById('dash-results').innerHTML = `
