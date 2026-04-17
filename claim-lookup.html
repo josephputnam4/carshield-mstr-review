@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CarShield | Claim Status Lookup</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:    #0d2d3a;
+    --teal:    #0e9fac;
+    --teal2:   #0b8a96;
+    --teal-lt: #f0fdfc;
+    --teal-bd: #99f6e4;
+    --slate:   #94a3b8;
+    --ink:     #111827;
+    --mid:     #374151;
+    --muted:   #6b7280;
+    --hint:    #9ca3af;
+    --border:  #e5e7eb;
+    --white:   #ffffff;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0fdfc; min-height: 100vh; color: var(--ink); }
+
+  /* NAV */
+  .nav { background: var(--navy); height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 100; }
+  .nav-left { display: flex; align-items: center; gap: 10px; }
+  .nav-wordmark { color: #fff; font-size: 15px; font-weight: 700; }
+  .nav-divider { width: 1px; height: 18px; background: #ffffff30; }
+  .nav-tool { color: var(--slate); font-size: 13px; }
+  .nav-badge { color: var(--teal); font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border: 1px solid #0e9fac40; border-radius: 20px; padding: 3px 10px; }
+  .nav-home { color: var(--slate); font-size: 12px; background: none; border: none; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+  .nav-home:hover { color: #fff; }
+
+  /* HERO */
+  .hero { background: var(--navy); padding: 36px 24px 52px; text-align: center; }
+  .hero-eyebrow { font-size: 11px; font-weight: 700; color: var(--teal); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; }
+  .hero h1 { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 8px; }
+  .hero h1 span { color: var(--teal); }
+  .hero p { font-size: 14px; color: var(--slate); }
+
+  /* WRAP */
+  .wrap { max-width: 620px; margin: -24px auto 0; padding: 0 16px 60px; }
+
+  /* CARD */
+  .card { background: var(--white); border-radius: 14px; box-shadow: 0 4px 24px rgba(13,45,58,.10); padding: 22px; margin-bottom: 14px; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  label { display: block; font-size: 11px; font-weight: 700; color: var(--mid); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  input { width: 100%; padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 14px; color: var(--ink); outline: none; transition: border-color .15s, box-shadow .15s; }
+  input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px #0e9fac20; }
+  .btn { width: 100%; padding: 12px; background: var(--teal); color: #fff; border: none; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .2s; letter-spacing: .02em; }
+  .btn:hover:not(:disabled) { background: var(--teal2); }
+  .btn:disabled { background: #0e9fac80; cursor: default; }
+
+  /* ALERTS */
+  .alert { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
+  .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+  .alert-warn  { background: #fffbeb; border: 1px solid #fde68a; color: #b45309; }
+  .hidden { display: none !important; }
+
+  /* DEMO HINT */
+  .demo-hint { margin-top: 12px; padding: 8px 12px; background: var(--teal-lt); border: 1px solid var(--teal-bd); border-radius: 8px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .demo-hint span { font-size: 11px; color: var(--muted); }
+  .demo-link { font-size: 11px; color: var(--teal); background: none; border: none; cursor: pointer; text-decoration: underline; padding: 0 3px; font-weight: 600; }
+  .demo-link:hover { color: var(--teal2); }
+
+  /* RESULT HEADER */
+  .claim-eyebrow { font-size: 11px; color: var(--teal); font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
+  .claim-vehicle { font-size: 19px; font-weight: 800; color: var(--navy); }
+  .claim-sub { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .claim-sub strong { color: var(--navy); }
+  .result-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+
+  /* BADGE */
+  .badge { border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 700; white-space: nowrap; border-width: 1.5px; border-style: solid; }
+  .badge-sm { padding: 2px 10px; font-size: 11px; }
+
+  /* TIMELINE */
+  .timeline { display: flex; align-items: center; margin-top: 18px; padding: 0 4px; }
+  .tl-step { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .tl-dot { border-radius: 50%; transition: all .2s; }
+  .tl-label { font-size: 10px; white-space: nowrap; }
+  .tl-line { flex: 1; height: 2px; margin: 0 2px; margin-bottom: 16px; transition: background .3s; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; background: #e8f8f9; border-radius: 10px; padding: 4px; }
+  .tab { flex: 1; padding: 9px 6px; font-size: 13px; font-weight: 400; color: var(--muted); background: none; border: none; border-radius: 8px; cursor: pointer; transition: all .15s; }
+  .tab.active { font-weight: 700; color: var(--navy); background: var(--white); box-shadow: 0 1px 4px rgba(14,159,172,.15); }
+
+  /* OVERVIEW GRID */
+  .ov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 24px; }
+  .ov-key { font-size: 10px; color: var(--hint); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .ov-val { font-size: 14px; color: var(--navy); font-weight: 600; }
+  .service-badge { background: var(--teal-lt); color: var(--teal); border: 1px solid var(--teal-bd); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
+
+  /* PART CARDS */
+  .part-card { background: #fafffe; border: 1.5px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .part-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; transition: background .15s; }
+  .part-header:hover { background: #f0fdfc; }
+  .part-name { font-weight: 700; font-size: 14px; color: var(--navy); }
+  .part-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .part-sub b { color: var(--teal); font-weight: 600; }
+  .part-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 12px; }
+  .part-total { font-size: 14px; font-weight: 800; color: var(--navy); min-width: 70px; text-align: right; }
+  .part-detail { border-top: 1.5px solid var(--border); padding: 14px 16px; }
+  .pd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+  .pd-key { font-size: 10px; color: var(--hint); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+  .pd-val { font-size: 13px; color: var(--navy); font-weight: 600; }
+
+  /* COST */
+  .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #f3f4f6; }
+  .cost-lbl { font-size: 13px; color: var(--mid); }
+  .cost-val { font-size: 13px; color: var(--mid); font-weight: 500; }
+  .cost-row.bold .cost-lbl { font-weight: 600; }
+  .cost-row.bold .cost-val { font-weight: 700; color: var(--navy); }
+  .cost-row.teal .cost-val { color: var(--teal); font-weight: 700; }
+  .lol-card { margin-top: 16px; padding: 16px; background: linear-gradient(135deg, var(--navy), #0e4a57); border-radius: 12px; }
+  .lol-label { font-size: 11px; color: var(--teal); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+  .lol-amount { font-size: 24px; font-weight: 800; color: #fff; }
+  .lol-sub { font-size: 11px; color: var(--slate); margin-top: 3px; }
+
+  /* RESET / FOOTER */
+  .reset-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 16px; background: var(--white); border-radius: 10px; border: 1.5px solid var(--border); }
+  .reset-bar span { font-size: 12px; color: var(--hint); }
+  .reset-link { font-size: 12px; color: var(--teal); background: none; border: none; cursor: pointer; text-decoration: underline; font-weight: 600; }
+  .foot { text-align: center; padding: 28px 16px; color: var(--slate); font-size: 12px; }
+  .foot strong { color: var(--navy); }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes spin   { to { transform: rotate(360deg); } }
+  .fade-in { animation: fadeIn .3s ease; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #ffffff40; border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 8px; }
+
+  @media (max-width: 480px) {
+    .form-grid, .ov-grid, .pd-grid { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-left">
+    <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+      <path d="M16 2L4 8v10c0 7.18 5.24 13.9 12 15.47C22.76 31.9 28 25.18 28 18V8L16 2z" fill="#0e9fac"/>
+      <path d="M11 16l3.5 3.5 7-7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="nav-wordmark">CarShield</span>
+    <div class="nav-divider"></div>
+    <span class="nav-tool">Claim Status Lookup</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="nav-badge">CS Team · Internal</span>
+    <a href="index.html" class="nav-home">← Review Studio</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Claims · Parts &amp; Payments</div>
+  <h1>Check a <span>Claim Status</span></h1>
+  <p>Look up any claim by claim number and policy number.</p>
+</div>
+
+<!-- MAIN -->
+<div class="wrap">
+
+  <div class="card" id="formCard">
+    <div class="form-grid">
+      <div>
+        <label for="claimInput">Claim Number</label>
+        <input id="claimInput" type="text" placeholder="e.g. 2379543" autocomplete="off"/>
+      </div>
+      <div>
+        <label for="polInput">Policy Number</label>
+        <input id="polInput" type="text" placeholder="e.g. ABF3594014" autocomplete="off"/>
+      </div>
+    </div>
+    <button class="btn" id="lookupBtn" onclick="doLookup()">Look Up Claim →</button>
+    <div class="alert alert-error hidden" id="errBox"></div>
+    <div class="demo-hint">
+      <span>Demo: </span>
+      <button class="demo-link" onclick="prefill('2379543','ABF3594014')">2379543</button>
+      <span style="color:#d1d5db">|</span>
+      <button class="demo-link" onclick="prefill('2499207','ABF9944364')">2499207</button>
+      <span style="color:#d1d5db">|</span>
+      <button class="demo-link" onclick="prefill('2545633','ABF3136486')">2545633</button>
+    </div>
+  </div>
+
+  <div id="resultArea"></div>
+
+</div>
+
+<div class="foot">Questions? Call <strong>1-800-CAR-SHIELD</strong> · Available 24/7</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+//  STEP 1 — PASTE YOUR CLOUDFLARE WORKER URL HERE
+//  Deploy mstr-worker.js to a Cloudflare Worker, then paste the
+//  Worker URL below. Example:
+//  'https://cs-claim-lookup.josephputnam4.workers.dev'
+// ─────────────────────────────────────────────────────────────────
+const WORKER_URL = 'https://YOUR-WORKER-URL-HERE.workers.dev';
+// ─────────────────────────────────────────────────────────────────
+
+// Demo data — used automatically when WORKER_URL is still a placeholder
+const MOCK = {
+  '2379543|ABF3594014': {
+    claim_number:'2379543', full_contract_number:'ABF3594014', customer_name:'Michael Torres',
+    vehicle_make:'Chevrolet', vehicle_model:'Silverado', vehicle_model_year:'2019',
+    callin_date:'2026-03-14', breakdown_date:'2026-03-13', first_auth_date:'2026-03-14', payment_date:'2026-04-01',
+    claim_status_display:'Closed', claim_paid_status:'Paid',
+    plan_group_description:'Powertrain Plus', contract_term_type:'Extended', deductible_code:'$100', coverage_group_code:'Powertrain',
+    authorized_labor_amount:480, authorized_part_amount:1240, authorized_total:1720, authorized_total_tax:103.20, authorized_grand_total:1823.20,
+    payment_amount:1723.20, customer_responsibility_est:100, remaining_lol:3250,
+    same_day_auth_flag:false, preferred_repair_facility_flag:true, days_breakdown_to_auth:1,
+    parts:[{name:'Transmission Assembly (Remanufactured)',coverage:'Powertrain',auth_date:'2026-03-14',auth_num:'AUTH-774421',status:'Paid',labor_hrs:6,labor_rate:80,labor_amt:480,part_amt:1240,tax:103.20,grand:1823.20,last_activity:'2026-04-01'}]
+  },
+  '2499207|ABF9944364': {
+    claim_number:'2499207', full_contract_number:'ABF9944364', customer_name:'Sandra Okafor',
+    vehicle_make:'Ford', vehicle_model:'Explorer', vehicle_model_year:'2021',
+    callin_date:'2026-04-10', breakdown_date:'2026-04-09', first_auth_date:'2026-04-10', payment_date:null,
+    claim_status_display:'In Review', claim_paid_status:'Unpaid',
+    plan_group_description:'Supreme Coverage', contract_term_type:'Extended', deductible_code:'$200', coverage_group_code:'Air Conditioning',
+    authorized_labor_amount:320, authorized_part_amount:890, authorized_total:1210, authorized_total_tax:72.60, authorized_grand_total:1282.60,
+    payment_amount:null, customer_responsibility_est:null, remaining_lol:7800,
+    same_day_auth_flag:true, preferred_repair_facility_flag:false, days_breakdown_to_auth:1,
+    parts:[{name:'A/C Compressor',coverage:'Air Conditioning',auth_date:'2026-04-10',auth_num:'AUTH-886632',status:'Pending',labor_hrs:4,labor_rate:80,labor_amt:320,part_amt:890,tax:72.60,grand:1282.60,last_activity:'2026-04-10'}]
+  },
+  '2545633|ABF3136486': {
+    claim_number:'2545633', full_contract_number:'ABF3136486', customer_name:'James Whitfield',
+    vehicle_make:'Toyota', vehicle_model:'Camry', vehicle_model_year:'2020',
+    callin_date:'2026-04-15', breakdown_date:'2026-04-15', first_auth_date:'2026-04-15', payment_date:null,
+    claim_status_display:'Approved', claim_paid_status:'Unpaid',
+    plan_group_description:'Powertrain Select', contract_term_type:'Standard', deductible_code:'$0', coverage_group_code:'Engine Cooling',
+    authorized_labor_amount:240, authorized_part_amount:560, authorized_total:800, authorized_total_tax:48, authorized_grand_total:848,
+    payment_amount:null, customer_responsibility_est:0, remaining_lol:4100,
+    same_day_auth_flag:true, preferred_repair_facility_flag:true, days_breakdown_to_auth:0,
+    parts:[
+      {name:'Water Pump',coverage:'Engine Cooling',auth_date:'2026-04-15',auth_num:'AUTH-991103',status:'Approved',labor_hrs:3,labor_rate:80,labor_amt:240,part_amt:380,tax:37.20,grand:657.20,last_activity:'2026-04-16'},
+      {name:'Thermostat & Housing',coverage:'Engine Cooling',auth_date:'2026-04-16',auth_num:'AUTH-991104',status:'Approved',labor_hrs:0,labor_rate:0,labor_amt:0,part_amt:180,tax:10.80,grand:190.80,last_activity:'2026-04-16'}
+    ]
+  }
+};
+
+const SS = {
+  'Received':  {c:'#1d4ed8',bg:'#eff6ff',b:'#bfdbfe'},
+  'In Review': {c:'#b45309',bg:'#fffbeb',b:'#fde68a'},
+  'Approved':  {c:'#0e9fac',bg:'#f0fdfc',b:'#99f6e4'},
+  'Partially Approved':{c:'#6d28d9',bg:'#f5f3ff',b:'#ddd6fe'},
+  'Not Covered':{c:'#b91c1c',bg:'#fef2f2',b:'#fecaca'},
+  'Closed':    {c:'#4b5563',bg:'#f9fafb',b:'#e5e7eb'},
+  'Reopened':  {c:'#c2410c',bg:'#fff7ed',b:'#fed7aa'},
+};
+const PS = {
+  'Paid':    {c:'#059669',bg:'#ecfdf5',b:'#a7f3d0'},
+  'Approved':{c:'#0e9fac',bg:'#f0fdfc',b:'#99f6e4'},
+  'Pending': {c:'#b45309',bg:'#fffbeb',b:'#fde68a'},
+  'Denied':  {c:'#b91c1c',bg:'#fef2f2',b:'#fecaca'},
+};
+
+let activeTab = 'overview';
+let openParts = {};
+let lastCN = '', lastPN = '';
+
+const fmt = n => n == null ? '—' : '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fd  = d => { if(!d) return '—'; const[y,m,day]=d.split('-'); return new Date(y,m-1,day).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); };
+const badgeHtml = (s,lg) => { const c=SS[s]||{c:'#4b5563',bg:'#f9fafb',b:'#e5e7eb'}; return `<span class="badge${lg?'':' badge-sm'}" style="color:${c.c};background:${c.bg};border-color:${c.b}">${s}</span>`; };
+
+async function doLookup() {
+  const cn = document.getElementById('claimInput').value.trim();
+  const pn = document.getElementById('polInput').value.trim().toUpperCase();
+  const errBox = document.getElementById('errBox');
+  const btn    = document.getElementById('lookupBtn');
+
+  errBox.classList.add('hidden');
+  if (!cn || !pn) { errBox.textContent = 'Please enter both a claim number and policy number.'; errBox.classList.remove('hidden'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Looking up...';
+  document.getElementById('resultArea').innerHTML = '';
+  activeTab = 'overview'; openParts = {};
+  lastCN = cn; lastPN = pn;
+
+  try {
+    let claim = null;
+    const useMock = WORKER_URL.includes('YOUR-WORKER-URL-HERE');
+
+    if (useMock) {
+      // Using demo data — remove this block once Worker is live
+      await new Promise(r => setTimeout(r, 600));
+      const hit = MOCK[`${cn}|${pn}`];
+      if (hit) claim = hit;
+    } else {
+      // Live MSTR call via Cloudflare Worker
+      const res = await fetch(WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ claim_number: cn, policy_number: pn }),
+      });
+      if (!res.ok) throw new Error(`Worker returned ${res.status}`);
+      const data = await res.json();
+      if (data.found) claim = data.claim;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = 'Look Up Claim →';
+
+    if (claim) {
+      renderResult(claim);
+    } else {
+      errBox.textContent = 'No claim found matching that claim number and policy number. Please check your information or call 1-800-CAR-SHIELD.';
+      errBox.classList.remove('hidden');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = 'Look Up Claim →';
+    errBox.textContent = `Error reaching the lookup service: ${e.message}. Check the Worker URL in claim-lookup.html.`;
+    errBox.classList.remove('hidden');
+  }
+}
+
+function renderResult(r) {
+  const tabs = [
+    {id:'overview', label:'Overview'},
+    {id:'parts',    label:`Parts & Labor (${r.parts?.length ?? 0})`},
+    {id:'cost',     label:'Cost Summary'},
+  ];
+
+  let h = `<div class="fade-in">
+  <div class="card">
+    <div class="result-header">
+      <div>
+        <div class="claim-eyebrow">Claim #${r.claim_number}</div>
+        <div class="claim-vehicle">${r.vehicle_model_year} ${r.vehicle_make} ${r.vehicle_model}</div>
+        <div class="claim-sub">${r.customer_name} · <strong>${r.full_contract_number}</strong></div>
+      </div>
+      ${badgeHtml(r.claim_status_display, true)}
+    </div>
+    ${renderTimeline(r.claim_status_display)}
+  </div>
+
+  <div class="tabs">
+    ${tabs.map(t => `<button class="tab${activeTab===t.id?' active':''}" onclick="switchTab('${t.id}',${JSON.stringify(r).replace(/'/g,"\\'")})">${t.label}</button>`).join('')}
+  </div>`;
+
+  if (activeTab === 'overview') {
+    const rows = [
+      ['Plan',                r.plan_group_description],
+      ['Coverage',            r.coverage_group_code],
+      ['Contract term',       r.contract_term_type],
+      ['Deductible',          r.deductible_code],
+      ['Call-in date',        fd(r.callin_date)],
+      ['Breakdown date',      fd(r.breakdown_date)],
+      ['First authorization', fd(r.first_auth_date)],
+      ['Payment date',        fd(r.payment_date)],
+      ['Days to auth',        r.days_breakdown_to_auth === 0 ? 'Same day' : `${r.days_breakdown_to_auth} day${r.days_breakdown_to_auth !== 1 ? 's' : ''}`],
+      ['Remaining coverage',  fmt(r.remaining_lol)],
+    ];
+    h += `<div class="card">
+      <div class="ov-grid">
+        ${rows.map(([k,v]) => `<div><div class="ov-key">${k}</div><div class="ov-val">${v ?? '—'}</div></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+        ${r.same_day_auth_flag    ? `<span class="service-badge">⚡ Same-day authorization</span>` : ''}
+        ${r.preferred_repair_facility_flag ? `<span class="service-badge">★ Preferred repair facility</span>` : ''}
+      </div>
+    </div>`;
+  }
+
+  if (activeTab === 'parts') {
+    const parts = r.parts || [];
+    h += parts.length === 0
+      ? `<div class="card" style="text-align:center;color:var(--muted);font-size:14px;padding:32px">No parts on record yet.</div>`
+      : parts.map((p, i) => renderPart(p, i)).join('');
+  }
+
+  if (activeTab === 'cost') {
+    h += `<div class="card">
+      <div class="cost-row"><span class="cost-lbl">Authorized labor</span><span class="cost-val">${fmt(r.authorized_labor_amount)}</span></div>
+      <div class="cost-row"><span class="cost-lbl">Authorized parts</span><span class="cost-val">${fmt(r.authorized_part_amount)}</span></div>
+      <div class="cost-row"><span class="cost-lbl">Tax</span><span class="cost-val">${fmt(r.authorized_total_tax)}</span></div>
+      <div class="cost-row bold"><span class="cost-lbl">Total authorized</span><span class="cost-val">${fmt(r.authorized_grand_total)}</span></div>
+      <div style="margin:6px 0"></div>
+      ${r.payment_amount != null ? `<div class="cost-row bold teal"><span class="cost-lbl">CarShield payment</span><span class="cost-val">${fmt(r.payment_amount)}</span></div>` : ''}
+      ${r.customer_responsibility_est != null ? `<div class="cost-row bold"><span class="cost-lbl">${r.deductible_code && r.deductible_code !== '$0' ? `Your deductible (${r.deductible_code})` : 'Your responsibility'}</span><span class="cost-val">${fmt(r.customer_responsibility_est)}</span></div>` : ''}
+      <div class="lol-card">
+        <div class="lol-label">Remaining coverage limit</div>
+        <div class="lol-amount">${fmt(r.remaining_lol)}</div>
+        <div class="lol-sub">Available balance on your contract limit of liability</div>
+      </div>
+      ${r.claim_paid_status === 'Unpaid' && r.claim_status_display === 'In Review'
+        ? `<div class="alert alert-warn" style="margin-top:12px">Payment pending. Once the repair facility submits their final invoice, CarShield will process payment.</div>` : ''}
+    </div>`;
+  }
+
+  h += `<div class="reset-bar">
+    <span>Questions? Call <strong style="color:var(--navy)">1-800-CAR-SHIELD</strong></span>
+    <button class="reset-link" onclick="resetLookup()">Look up another claim</button>
+  </div></div>`;
+
+  document.getElementById('resultArea').innerHTML = h;
+}
+
+function renderTimeline(status) {
+  const steps = ['Received','In Review','Approved','Closed'];
+  const sm = {'Partially Approved':2,'Not Covered':2,'Reopened':3};
+  const idx = steps.indexOf(status) >= 0 ? steps.indexOf(status) : (sm[status] ?? 0);
+  let h = `<div class="timeline">`;
+  steps.forEach((s, i) => {
+    const done = i < idx, active = i === idx, last = i === steps.length - 1;
+    const dc = (done || active) ? '#0e9fac' : '#e5e7eb';
+    const tc = active ? '#0e9fac' : done ? '#6b7280' : '#9ca3af';
+    h += `<div class="tl-step${last ? '' : ' flex1' /* flex1 handled inline */}" style="${last ? '' : 'flex:1;'}display:flex;flex-direction:column;align-items:center;gap:5px">
+      <div class="tl-dot" style="width:${active?16:10}px;height:${active?16:10}px;background:${dc};${active?'box-shadow:0 0 0 4px #0e9fac25;':''}"></div>
+      <span class="tl-label" style="color:${tc};font-weight:${active?700:400}">${s}</span>
+    </div>`;
+    if (!last) h += `<div class="tl-line" style="background:${done?'#0e9fac':'#e5e7eb'}"></div>`;
+  });
+  return h + '</div>';
+}
+
+function renderPart(p, i) {
+  const ps = PS[p.status] || {c:'#4b5563',bg:'#f9fafb',b:'#e5e7eb'};
+  const open = openParts[i];
+  let h = `<div class="part-card">
+    <div class="part-header" onclick="togglePart(${i})">
+      <div style="flex:1;min-width:0">
+        <div class="part-name">${p.name}</div>
+        <div class="part-sub">${p.coverage} · <b>${p.auth_num}</b></div>
+      </div>
+      <div class="part-right">
+        <span class="badge badge-sm" style="color:${ps.c};background:${ps.bg};border-color:${ps.b}">${p.status}</span>
+        <span class="part-total">${fmt(p.grand)}</span>
+        <span style="color:var(--hint);font-size:11px;width:12px;text-align:center">${open ? '▲' : '▼'}</span>
+      </div>
+    </div>`;
+  if (open) {
+    const rows = [
+      ['Auth date',   fd(p.auth_date)],
+      ['Auth number', p.auth_num],
+      ['Labor',       p.labor_hrs > 0 ? `${p.labor_hrs} hrs @ ${fmt(p.labor_rate)}/hr` : '—'],
+      ['Auth labor',  fmt(p.labor_amt)],
+      ['Auth parts',  fmt(p.part_amt)],
+      ['Tax',         fmt(p.tax)],
+      ['Last activity', fd(p.last_activity)],
+    ];
+    h += `<div class="part-detail"><div class="pd-grid">
+      ${rows.map(([k,v]) => `<div><div class="pd-key">${k}</div><div class="pd-val">${v}</div></div>`).join('')}
+    </div></div>`;
+  }
+  return h + '</div>';
+}
+
+function switchTab(tab, claim) {
+  activeTab = tab;
+  renderResult(claim);
+}
+
+function togglePart(i) {
+  openParts[i] = !openParts[i];
+  // Re-lookup from mock or re-render from last state
+  const key = `${lastCN}|${lastPN}`;
+  const r = MOCK[key];
+  if (r) renderResult(r);
+}
+
+function prefill(cn, pn) {
+  document.getElementById('claimInput').value = cn;
+  document.getElementById('polInput').value   = pn;
+  setTimeout(doLookup, 50);
+}
+
+function resetLookup() {
+  document.getElementById('resultArea').innerHTML = '';
+  document.getElementById('claimInput').value = '';
+  document.getElementById('polInput').value   = '';
+  document.getElementById('errBox').classList.add('hidden');
+  lastCN = ''; lastPN = '';
+}
+
+// Enter key support
+['claimInput','polInput'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLookup(); })
+);
+</script>
+</body>
+</html>
